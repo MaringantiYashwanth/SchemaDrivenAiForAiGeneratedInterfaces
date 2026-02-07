@@ -64,7 +64,9 @@ How To Use
     ]
   }
 }
+```
 Key Files
+
 src/components/tambo/schema-form.tsx schema renderer
 
 src/lib/tambo.ts component registration
