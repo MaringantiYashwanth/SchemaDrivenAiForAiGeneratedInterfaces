@@ -29,14 +29,14 @@ A full‑stack Next.js + Tambo application that turns natural language into sche
 5. Environment Variables
 NEXT_PUBLIC_TAMBO_API_KEY required.
 
-NEXT_PUBLIC_TAMBO_URL optional if you host Tambo server yourself.
+6. NEXT_PUBLIC_TAMBO_URL optional if you host Tambo server yourself.
 
 How To Use
-Open /.
+1. Open /.
 
-Ask the assistant to generate a schema‑driven form.
+2. Ask the assistant to generate a schema‑driven form.
 
-The rendered UI appears on the right.
+3. The rendered UI appears on the right.
  ## Example Prompt
    Create a schema-driven form for a user profile. Include name, email, age (18-99), gender select, and a newsletter checkbox. Add submit and reset actions.
    Schema Shape
