@@ -37,9 +37,9 @@ Open /.
 Ask the assistant to generate a schema‑driven form.
 
 The rendered UI appears on the right.
-```bash
-   Example Prompt
+ ## Example Prompt
    Create a schema-driven form for a user profile. Include name, email, age (18-99), gender select, and a newsletter checkbox. Add submit and reset actions.
+```bash
 
 Schema Shape
 The renderer expects:
