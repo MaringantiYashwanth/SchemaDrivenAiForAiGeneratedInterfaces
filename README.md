@@ -17,16 +17,16 @@ A full‑stack Next.js + Tambo application that turns natural language into sche
 1. Install deps:
    ```bash
    npm install
-Create .env.local and add your Tambo API key:
 
-bash
-NEXT_PUBLIC_TAMBO_API_KEY=your_key_here
-Run the dev server:
+2. Create .env.local and add your Tambo API key:
+   ```bash
+   NEXT_PUBLIC_TAMBO_API_KEY=your_key_here
+3. Run the dev server:
+   ```bash
+   npm run dev
+4. Open http://localhost:3000.
 
-bash
-npm run dev
-Open http://localhost:3000
-Environment Variables
+5. Environment Variables
 NEXT_PUBLIC_TAMBO_API_KEY required.
 
 NEXT_PUBLIC_TAMBO_URL optional if you host Tambo server yourself.
@@ -37,15 +37,13 @@ Open /.
 Ask the assistant to generate a schema‑driven form.
 
 The rendered UI appears on the right.
+```bash
+   Example Prompt
+   Create a schema-driven form for a user profile. Include name, email, age (18-99), gender select, and a newsletter checkbox. Add submit and reset actions.
 
-Example Prompt
-text
-Create a schema-driven form for a user profile. Include name, email, age (18-99), gender select, and a newsletter checkbox. Add submit and reset actions.
 Schema Shape
 The renderer expects:
-
-json
-{
+   {
   "uiSchema": {
     "title": "User Profile Form",
     "description": "Schema-driven UI for collecting user details",
@@ -84,6 +82,7 @@ Troubleshooting
 If you see Turbopack alias errors, ensure aliases are set in next.config.ts.
 
 If you want to disable Turbopack:
-
-bash
-NEXT_DISABLE_TURBOPACK=1 npm run dev
+   ```bash
+   NEXT_DISABLE_TURBOPACK=1 npm run dev
+License
+MIT
