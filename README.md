@@ -65,7 +65,7 @@ How To Use
   }
 }
 ```
-Key Files
+## Key Files
 
 src/components/tambo/schema-form.tsx schema renderer
 
@@ -75,10 +75,10 @@ src/app/(protected)/page.tsx main UI page
 
 src/components/theme-toggle.tsx dark mode toggle
 
-Auth Status
+## Auth Status
 Authentication is currently disabled (temporarily stubbed). The app loads directly on /.
 
-Troubleshooting
+## Troubleshooting
 If you see Turbopack alias errors, ensure aliases are set in next.config.ts.
 
 If you want to disable Turbopack:
