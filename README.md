@@ -11,7 +11,7 @@ A full‑stack Next.js + Tambo application that turns natural language into sche
 ## Architecture
 - Tambo handles the LLM conversation and renders `SchemaForm`.
 - `SchemaForm` consumes a JSON schema and produces UI.
-- The latest generated component is surfaced in a right‑side panel.
+- The latest generated component is in a right‑side panel.
 
 ## Quick Start
 1. Install deps:
@@ -39,10 +39,8 @@ Ask the assistant to generate a schema‑driven form.
 The rendered UI appears on the right.
  ## Example Prompt
    Create a schema-driven form for a user profile. Include name, email, age (18-99), gender select, and a newsletter checkbox. Add submit and reset actions.
+   Schema Shape
 ```bash
-
-Schema Shape
-The renderer expects:
    {
   "uiSchema": {
     "title": "User Profile Form",
