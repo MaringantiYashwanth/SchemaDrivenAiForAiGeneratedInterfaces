@@ -81,6 +81,15 @@ export async function fetchJson(url: string, signal?: AbortSignal): Promise<unkn
     );
   }
 
+  const contentType = response.headers.get("content-type") ?? "";
+  if (!/json/i.test(contentType)) {
+    throw new SchemaLoadError(
+      "invalid-json",
+      "Schema response did not have a JSON content-type.",
+      `content-type=${contentType || "(missing)"}`,
+    );
+  }
+
   try {
     return await response.json();
   } catch {

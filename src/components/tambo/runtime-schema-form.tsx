@@ -51,7 +51,11 @@ const schemaFormRuntimePayloadSchema: z.ZodType<SchemaFormProps, z.ZodTypeDef, u
       return value;
     }
 
-    return { uiSchema: value };
+    if (value && typeof value === "object") {
+      return { uiSchema: value };
+    }
+
+    return value;
   }, schemaFormSchema);
 
 export function RuntimeSchemaForm(props: RuntimeSchemaFormProps) {
