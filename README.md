@@ -71,7 +71,7 @@ If `version` is omitted, the renderer falls back to legacy mode (`"0"`).
 
 Schema versioning
 - Supported major versions: `"1"` (current)
-- Legacy mode: omit `version` (or set it to `"0"`)
+- Legacy mode: omit `version` (or use major version `"0"`, e.g. `"0"`, `"0.1.0"`)
 - Invalid/unsupported versions (for example: `"2"`, `"beta"`) will not render and show an error state instead
 ## Key Files
 

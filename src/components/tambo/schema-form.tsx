@@ -172,13 +172,21 @@ const schemaVersionFieldSchema = z
   .min(1)
   .describe(
     "Schema version. Recommended: '1'. If omitted, the renderer falls back to legacy mode (version '0'). Compatibility is validated by the renderer at runtime.",
-  )
-  .optional();
+  );
 
-export const schemaFormSchema = z.object({
+const schemaFormObjectSchema = z.object({
   version: schemaVersionFieldSchema,
   uiSchema: z.union([uiSchemaWithLayoutAndFields, uiSchemaWithLayoutOnly, uiSchemaWithFieldsOnly]),
 });
+
+export const schemaFormSchema = z.preprocess((value) => {
+  if (!value || typeof value !== "object") return value;
+
+  const record = value as Record<string, unknown>;
+  if ("version" in record) return value;
+
+  return { ...record, version: LEGACY_SCHEMA_VERSION };
+}, schemaFormObjectSchema);
 
 type SchemaFormProps = z.infer<typeof schemaFormSchema>;
 
