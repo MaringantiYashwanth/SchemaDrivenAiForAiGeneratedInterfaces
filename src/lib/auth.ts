@@ -50,6 +50,7 @@ export async function createSession(email: string) {
   const signature = sign(payload, secret);
   const value = `${payload}.${signature}`;
 
+  // Next.js 16+ returns an async cookie store.
   const cookieStore = await cookies();
   cookieStore.set(SESSION_COOKIE, value, {
     httpOnly: true,

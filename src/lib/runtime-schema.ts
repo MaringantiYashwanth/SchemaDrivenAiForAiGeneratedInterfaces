@@ -4,6 +4,7 @@ export type SchemaLoadErrorKind =
   | "invalid-url"
   | "http"
   | "network"
+  | "aborted"
   | "invalid-json"
   | "validation";
 
@@ -21,7 +22,7 @@ export class SchemaLoadError extends Error {
 }
 
 export function isSupportedSchemaUrl(url: string): boolean {
-  if (url.startsWith("//")) return true;
+  if (url.startsWith("//")) return false;
   return url.startsWith("/") || url.startsWith("https://") || url.startsWith("http://");
 }
 
@@ -63,16 +64,20 @@ export async function fetchJson(url: string, signal?: AbortSignal): Promise<unkn
     });
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") {
-      throw error;
+      throw new SchemaLoadError("aborted", "Schema request was aborted.");
     }
 
-    throw new SchemaLoadError("network", "Failed to fetch schema.");
+    const details = process.env.NODE_ENV !== "production" ? String(error) : undefined;
+    throw new SchemaLoadError("network", "Failed to fetch schema.", details);
   }
 
   if (!response.ok) {
+    const contentType = response.headers.get("content-type");
+    const details = `status=${response.status} statusText=${response.statusText} content-type=${contentType ?? "(missing)"}`;
     throw new SchemaLoadError(
       "http",
       `Schema request failed with status ${response.status}.`,
+      details,
     );
   }
 

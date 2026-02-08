@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import { useDebounce } from "use-debounce";
 import { SchemaForm, schemaFormSchema } from "@/components/tambo/schema-form";
@@ -11,12 +11,20 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { loadAndValidateJson, SchemaLoadError } from "@/lib/runtime-schema";
+import {
+  isSupportedSchemaUrl,
+  loadAndValidateJson,
+  SchemaLoadError,
+  type SchemaLoadErrorKind,
+} from "@/lib/runtime-schema";
 
 export const runtimeSchemaFormSchema = z.object({
   schemaUrl: z
     .string()
     .min(1)
+    .refine(isSupportedSchemaUrl, {
+      message: "schemaUrl must start with /, http://, or https://",
+    })
     .describe(
       "URL to a JSON schema payload. Supports relative paths (e.g. /schemas/user-profile.json) and remote https:// endpoints. The response can be either a `uiSchema` object or `{ uiSchema: ... }`.",
     ),
@@ -29,7 +37,13 @@ type LoadState =
   | { status: "idle" }
   | { status: "loading"; url: string }
   | { status: "success"; url: string; data: SchemaFormProps }
-  | { status: "error"; url: string; message: string; details?: string };
+  | {
+      status: "error";
+      url: string;
+      kind?: SchemaLoadErrorKind;
+      message: string;
+      details?: string;
+    };
 
 const schemaFormRuntimePayloadSchema: z.ZodType<SchemaFormProps, z.ZodTypeDef, unknown> =
   z.preprocess((value) => {
@@ -46,6 +60,7 @@ export function RuntimeSchemaForm(props: RuntimeSchemaFormProps) {
   const url = useMemo(() => debouncedUrl.trim(), [debouncedUrl]);
 
   const [state, setState] = useState<LoadState>(() => ({ status: "idle" }));
+  const requestIdRef = useRef(0);
 
   useEffect(() => {
     if (!url) {
@@ -54,14 +69,26 @@ export function RuntimeSchemaForm(props: RuntimeSchemaFormProps) {
     }
 
     const controller = new AbortController();
+    const requestId = ++requestIdRef.current;
     setState({ status: "loading", url });
 
     loadAndValidateJson(url, schemaFormRuntimePayloadSchema, controller.signal)
       .then((data) => {
+        if (requestId !== requestIdRef.current) {
+          return;
+        }
         setState({ status: "success", url, data });
       })
       .catch((error: unknown) => {
         if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
+
+        if (error instanceof SchemaLoadError && error.kind === "aborted") {
+          return;
+        }
+
+        if (requestId !== requestIdRef.current) {
           return;
         }
 
@@ -71,10 +98,14 @@ export function RuntimeSchemaForm(props: RuntimeSchemaFormProps) {
             : error instanceof Error
               ? error.message
               : "Unknown error";
+        const kind = error instanceof SchemaLoadError ? error.kind : undefined;
         const details = error instanceof SchemaLoadError ? error.details : undefined;
 
-        console.error("Failed to load schema", { url, error });
-        setState({ status: "error", url, message, details });
+        if (process.env.NODE_ENV !== "production") {
+          console.error("Failed to load schema", { url, error });
+        }
+
+        setState({ status: "error", url, kind, message, details });
       });
 
     return () => {
@@ -112,15 +143,19 @@ export function RuntimeSchemaForm(props: RuntimeSchemaFormProps) {
   }
 
   if (state.status === "error") {
+    const showDetails = process.env.NODE_ENV !== "production" && state.details;
+
     return (
       <Card className="w-full">
         <CardHeader>
-          <CardTitle>Schema load failed</CardTitle>
+          <CardTitle>
+            {state.kind === "invalid-url" ? "Unsupported schema URL" : "Schema load failed"}
+          </CardTitle>
           <CardDescription className="break-words">{state.url}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-sm text-red-600 dark:text-red-400">{state.message}</p>
-          {state.details && (
+          {showDetails && (
             <pre className="rounded-md bg-slate-900 p-3 text-xs text-slate-100 overflow-x-auto whitespace-pre-wrap">
               {state.details}
             </pre>
