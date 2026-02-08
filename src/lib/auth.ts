@@ -28,6 +28,17 @@ const timingSafeEqualString = (a: string, b: string) => {
 
 const getSecret = () => process.env.AUTH_SESSION_SECRET ?? "";
 
+const resolveCookies = async (): Promise<Awaited<ReturnType<typeof cookies>>> => {
+  const cookieStoreOrPromise = cookies() as unknown;
+  const then = (cookieStoreOrPromise as { then?: unknown } | null)?.then;
+
+  if (typeof then === "function") {
+    return (await cookieStoreOrPromise) as Awaited<ReturnType<typeof cookies>>;
+  }
+
+  return cookieStoreOrPromise as Awaited<ReturnType<typeof cookies>>;
+};
+
 export async function createSession(email: string) {
   const secret = getSecret();
   if (!secret) {
@@ -50,7 +61,7 @@ export async function createSession(email: string) {
   const signature = sign(payload, secret);
   const value = `${payload}.${signature}`;
 
-  const cookieStore = await cookies();
+  const cookieStore = await resolveCookies();
   cookieStore.set(SESSION_COOKIE, value, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
@@ -61,7 +72,7 @@ export async function createSession(email: string) {
 }
 
 export async function clearSession() {
-  const cookieStore = await cookies();
+  const cookieStore = await resolveCookies();
   cookieStore.delete(SESSION_COOKIE);
 }
 
@@ -71,7 +82,7 @@ export async function getSession(): Promise<Session | null> {
     return null;
   }
 
-  const cookieStore = await cookies();
+  const cookieStore = await resolveCookies();
   const cookie = cookieStore.get(SESSION_COOKIE)?.value;
   if (!cookie) {
     return null;

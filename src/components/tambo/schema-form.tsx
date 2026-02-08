@@ -280,7 +280,7 @@ const resolveVisibility = (
     return { shouldRender: true, disabled: false };
   }
 
-  const fallbackBehavior = fallback === "disabled" ? "disabled" : "hidden";
+  const fallbackBehavior: FallbackBehavior = fallback ?? "hidden";
   if (fallbackBehavior === "disabled") {
     return { shouldRender: true, disabled: true };
   }
@@ -307,6 +307,11 @@ export function SchemaForm({ uiSchema }: SchemaFormProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
 
+  const evalContext: ConditionEvalContext = {
+    values: formData,
+    context: { submitted },
+  };
+
   const updateValue = (id: string, value: string | number | boolean) => {
     setFormData((prev) => ({ ...prev, [id]: value }));
     if (errors[id]) {
@@ -320,10 +325,6 @@ export function SchemaForm({ uiSchema }: SchemaFormProps) {
 
   const validate = () => {
     const nextErrors: Record<string, string> = {};
-    const evalContext: ConditionEvalContext = {
-      values: formData,
-      context: { submitted },
-    };
 
     uiSchema.fields.forEach((field) => {
       const visibility = resolveVisibility(field.condition, field.fallback, evalContext);
@@ -357,11 +358,6 @@ export function SchemaForm({ uiSchema }: SchemaFormProps) {
         { id: "submit", label: "Submit", type: "submit", style: "primary" },
         { id: "reset", label: "Reset", type: "reset", style: "secondary" },
       ];
-
-  const evalContext: ConditionEvalContext = {
-    values: formData,
-    context: { submitted },
-  };
 
   return (
     <Card className="w-full">
