@@ -170,7 +170,7 @@ const schemaVersionFieldSchema = z
   .trim()
   .min(1)
   .describe(
-    "Schema version. Recommended: '1'. If omitted, the renderer falls back to legacy mode (version '0').",
+    "Schema version. Recommended: '1'. If omitted, the renderer falls back to legacy mode (version '0'). Compatibility is validated by the renderer at runtime.",
   )
   .optional()
   .default(LEGACY_SCHEMA_VERSION);
@@ -257,7 +257,9 @@ function getNodeKey(node: SchemaNode, fallback: string) {
 }
 
 export function SchemaForm({ version, uiSchema }: SchemaFormProps) {
-  const versionInfo = getSchemaVersionInfo(version);
+  const effectiveVersion = version?.trim() ? version : LEGACY_SCHEMA_VERSION;
+  const versionInfo = getSchemaVersionInfo(effectiveVersion);
+  const recommendedMajor = SUPPORTED_SCHEMA_MAJOR_VERSIONS[0];
   const showLegacyWarning =
     versionInfo.status === "legacy" && process.env.NODE_ENV !== "production";
 
@@ -603,9 +605,9 @@ export function SchemaForm({ version, uiSchema }: SchemaFormProps) {
         )}
         {showLegacyWarning && (
           <CardDescription className="text-amber-700 dark:text-amber-400">
-            Legacy schema version detected (<span className="font-mono">{version}</span>). Add a
-            <span className="font-mono"> version</span> field with a supported major version (for example:
-            <span className="font-mono"> "{SUPPORTED_SCHEMA_MAJOR_VERSIONS[0]}"</span>).
+            Rendering in legacy schema mode (version <span className="font-mono">{effectiveVersion}</span>). To
+            opt in to the current behavior, add a <span className="font-mono">"version"</span> field (for
+            example: <span className="font-mono">"{recommendedMajor}"</span>).
           </CardDescription>
         )}
       </CardHeader>

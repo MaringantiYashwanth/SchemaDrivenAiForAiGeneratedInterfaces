@@ -10,6 +10,7 @@ export type SchemaVersionInfo =
 
 type ParsedSchemaVersion = {
   major: number;
+  // We currently only use `major`. `minor` and `patch` are parsed for forward compatibility.
   minor?: number;
   patch?: number;
 };
@@ -31,11 +32,7 @@ export function parseSchemaVersion(raw: string): ParsedSchemaVersion | null {
   return { major, minor, patch };
 }
 
-export function getSchemaVersionInfo(raw: unknown): SchemaVersionInfo {
-  if (typeof raw !== "string") {
-    return { status: "invalid", raw: raw === undefined ? "" : String(raw) };
-  }
-
+export function getSchemaVersionInfo(raw: string): SchemaVersionInfo {
   const trimmed = raw.trim();
   const parsed = parseSchemaVersion(trimmed);
 
