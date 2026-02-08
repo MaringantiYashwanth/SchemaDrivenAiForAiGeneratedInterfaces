@@ -9,6 +9,10 @@
  */
 
 import { SchemaForm, schemaFormSchema } from "@/components/tambo/schema-form";
+import {
+  RuntimeSchemaForm,
+  runtimeSchemaFormSchema,
+} from "@/components/tambo/runtime-schema-form";
 import type { TamboComponent } from "@tambo-ai/react";
 import { TamboTool } from "@tambo-ai/react";
 
@@ -36,5 +40,12 @@ export const components: TamboComponent[] = [
       "Schema-driven form renderer. Use this to generate full forms from JSON schema definitions.",
     component: SchemaForm,
     propsSchema: schemaFormSchema,
+  },
+  {
+    name: "RuntimeSchemaForm",
+    description:
+      "Loads a schema JSON payload at runtime (URL) and validates it before rendering SchemaForm.",
+    component: RuntimeSchemaForm,
+    propsSchema: runtimeSchemaFormSchema,
   },
 ];

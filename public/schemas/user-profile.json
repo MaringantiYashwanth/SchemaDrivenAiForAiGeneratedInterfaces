@@ -1,0 +1,66 @@
+{
+  "uiSchema": {
+    "title": "User profile",
+    "description": "Update your profile information.",
+    "fields": [
+      {
+        "id": "name",
+        "label": "Name",
+        "type": "text",
+        "placeholder": "Ada Lovelace",
+        "required": true
+      },
+      {
+        "id": "email",
+        "label": "Email",
+        "type": "email",
+        "placeholder": "ada@example.com",
+        "required": true
+      },
+      {
+        "id": "age",
+        "label": "Age",
+        "type": "number",
+        "min": 18,
+        "max": 99,
+        "placeholder": "18",
+        "required": true
+      },
+      {
+        "id": "gender",
+        "label": "Gender",
+        "type": "select",
+        "options": ["Female", "Male", "Non-binary", "Prefer not to say"],
+        "placeholder": "Select an option"
+      },
+      {
+        "id": "newsletter",
+        "label": "Newsletter",
+        "type": "checkbox",
+        "placeholder": "Email me product updates",
+        "default": false
+      },
+      {
+        "id": "bio",
+        "label": "Bio",
+        "type": "textarea",
+        "placeholder": "A short bio...",
+        "rows": 4
+      }
+    ],
+    "actions": [
+      {
+        "id": "submit",
+        "label": "Save",
+        "type": "submit",
+        "style": "primary"
+      },
+      {
+        "id": "reset",
+        "label": "Reset",
+        "type": "reset",
+        "style": "outline"
+      }
+    ]
+  }
+}

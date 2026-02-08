@@ -2,10 +2,6 @@ import type { NextConfig } from "next";
 import path from "path";
 
 const nextConfig: NextConfig = {
-  // Run ESLint separately via `npm run lint` (avoids deprecated next lint)
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   // Stub optional peer deps from @standard-community/standard-json
   // Use Turbopack aliases (Next.js 16+) and keep webpack for non-turbo builds.
   turbopack: {
