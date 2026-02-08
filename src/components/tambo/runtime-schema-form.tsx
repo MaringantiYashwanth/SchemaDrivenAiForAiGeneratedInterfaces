@@ -26,7 +26,7 @@ export const runtimeSchemaFormSchema = z.object({
       message: "schemaUrl must start with /, http://, or https://",
     })
     .describe(
-      "URL to a JSON schema payload. Supports relative paths (e.g. /schemas/user-profile.json) and remote https:// endpoints. Recommended response shape: `{ version: '1', uiSchema: ... }`. Legacy responses can be `{ uiSchema: ... }` or a bare `uiSchema` object (treated as version '0').",
+      "URL to a JSON schema payload. Supports relative paths (e.g. /schemas/user-profile.json) and remote https:// endpoints. Recommended shape: `{ version: '1', uiSchema: ... }`. Legacy shapes are still accepted; see README for schema versioning rules.",
     ),
 });
 

@@ -2,6 +2,8 @@ export const LEGACY_SCHEMA_VERSION = "0";
 
 export const SUPPORTED_SCHEMA_MAJOR_VERSIONS = [1] as const;
 
+export const CURRENT_SCHEMA_MAJOR_VERSION = SUPPORTED_SCHEMA_MAJOR_VERSIONS[0];
+
 export type SchemaVersionInfo =
   | { status: "supported"; raw: string; major: number }
   | { status: "legacy"; raw: string; major: 0 }
@@ -16,8 +18,7 @@ type ParsedSchemaVersion = {
 };
 
 export function parseSchemaVersion(raw: string): ParsedSchemaVersion | null {
-  const trimmed = raw.trim();
-  const match = trimmed.match(/^(\d+)(?:\.(\d+))?(?:\.(\d+))?$/);
+  const match = raw.match(/^(\d+)(?:\.(\d+))?(?:\.(\d+))?$/);
   if (!match) return null;
 
   const major = Number(match[1]);

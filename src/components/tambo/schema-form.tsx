@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
 import {
+  CURRENT_SCHEMA_MAJOR_VERSION,
   getSchemaVersionInfo,
   LEGACY_SCHEMA_VERSION,
   SUPPORTED_SCHEMA_MAJOR_VERSIONS,
@@ -172,8 +173,7 @@ const schemaVersionFieldSchema = z
   .describe(
     "Schema version. Recommended: '1'. If omitted, the renderer falls back to legacy mode (version '0'). Compatibility is validated by the renderer at runtime.",
   )
-  .optional()
-  .default(LEGACY_SCHEMA_VERSION);
+  .optional();
 
 export const schemaFormSchema = z.object({
   version: schemaVersionFieldSchema,
@@ -259,17 +259,21 @@ function getNodeKey(node: SchemaNode, fallback: string) {
 export function SchemaForm({ version, uiSchema }: SchemaFormProps) {
   const effectiveVersion = version?.trim() ? version : LEGACY_SCHEMA_VERSION;
   const versionInfo = getSchemaVersionInfo(effectiveVersion);
-  const recommendedMajor = SUPPORTED_SCHEMA_MAJOR_VERSIONS[0];
+  const recommendedMajor = CURRENT_SCHEMA_MAJOR_VERSION;
   const showLegacyWarning =
     versionInfo.status === "legacy" && process.env.NODE_ENV !== "production";
 
   if (versionInfo.status === "invalid") {
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("Invalid schema version received", { version: versionInfo.raw });
+    }
+
     return (
       <Card className="w-full">
         <CardHeader>
           <CardTitle>Invalid schema version</CardTitle>
           <CardDescription>
-            Expected a dot-separated numeric version (for example: 1 or 1.0.0).
+            Expected a dot-separated numeric version string (for example: "1" or "1.0.0").
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -282,12 +286,16 @@ export function SchemaForm({ version, uiSchema }: SchemaFormProps) {
   }
 
   if (versionInfo.status === "unsupported") {
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("Unsupported schema version received", { version: versionInfo.raw });
+    }
+
     return (
       <Card className="w-full">
         <CardHeader>
           <CardTitle>Unsupported schema version</CardTitle>
           <CardDescription>
-            This renderer supports major version{SUPPORTED_SCHEMA_MAJOR_VERSIONS.length === 1 ? "" : "s"} {SUPPORTED_SCHEMA_MAJOR_VERSIONS.join(", ")}.
+            This renderer supports major version{SUPPORTED_SCHEMA_MAJOR_VERSIONS.length === 1 ? "" : "s"} {SUPPORTED_SCHEMA_MAJOR_VERSIONS.map((v) => `"${v}"`).join(", ")}.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -605,8 +613,10 @@ export function SchemaForm({ version, uiSchema }: SchemaFormProps) {
         )}
         {showLegacyWarning && (
           <CardDescription className="text-amber-700 dark:text-amber-400">
-            Rendering in legacy schema mode (version <span className="font-mono">{effectiveVersion}</span>). To
-            opt in to the current behavior, add a <span className="font-mono">"version"</span> field (for
+            Rendering in legacy schema mode (effective version{" "}
+            <span className="font-mono">"{LEGACY_SCHEMA_VERSION}"</span>). Schemas without a version, or with
+            version <span className="font-mono">"0"</span>, use legacy behavior. To opt in to the current
+            behavior, set the <span className="font-mono">"version"</span> field to a supported major (for
             example: <span className="font-mono">"{recommendedMajor}"</span>).
           </CardDescription>
         )}
