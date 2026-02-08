@@ -18,7 +18,7 @@ export const runtimeSchemaFormSchema = z.object({
     .string()
     .min(1)
     .describe(
-      "URL to a JSON schema payload. Supports relative paths (e.g. /schemas/user-profile.json) and remote https:// endpoints.",
+      "URL to a JSON schema payload. Supports relative paths (e.g. /schemas/user-profile.json) and remote https:// endpoints. The response can be either a `uiSchema` object or `{ uiSchema: ... }`.",
     ),
 });
 

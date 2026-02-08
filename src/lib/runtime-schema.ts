@@ -13,6 +13,8 @@ export class SchemaLoadError extends Error {
 
   constructor(kind: SchemaLoadErrorKind, message: string, details?: string) {
     super(message);
+    this.name = "SchemaLoadError";
+    Object.setPrototypeOf(this, new.target.prototype);
     this.kind = kind;
     this.details = details;
   }
@@ -89,6 +91,7 @@ export async function loadAndValidateJson<T>(
     throw new SchemaLoadError(
       "invalid-url",
       "Schema URL must be a relative path (starting with /) or an http(s) URL.",
+      `Received: ${url}`,
     );
   }
 
