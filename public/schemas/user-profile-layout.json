@@ -1,0 +1,110 @@
+{
+  "uiSchema": {
+    "title": "User profile (layout)",
+    "description": "The same profile form, but with schema-defined layout primitives.",
+    "layout": [
+      {
+        "type": "section",
+        "id": "basics",
+        "title": "Basics",
+        "description": "This information is used to personalize your account.",
+        "children": [
+          {
+            "type": "stack",
+            "id": "basics-stack",
+            "children": [
+              {
+                "type": "columns",
+                "id": "basics-columns",
+                "columns": [
+                  {
+                    "id": "basics-left",
+                    "children": [
+                      {
+                        "id": "name",
+                        "label": "Name",
+                        "type": "text",
+                        "placeholder": "Ada Lovelace",
+                        "required": true
+                      },
+                      {
+                        "id": "email",
+                        "label": "Email",
+                        "type": "email",
+                        "placeholder": "ada@example.com",
+                        "required": true
+                      }
+                    ]
+                  },
+                  {
+                    "id": "basics-right",
+                    "children": [
+                      {
+                        "id": "age",
+                        "label": "Age",
+                        "type": "number",
+                        "min": 18,
+                        "max": 99,
+                        "placeholder": "18",
+                        "required": true
+                      },
+                      {
+                        "id": "gender",
+                        "label": "Gender",
+                        "type": "select",
+                        "options": ["Female", "Male", "Non-binary", "Prefer not to say"],
+                        "placeholder": "Select an option"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "group",
+        "id": "extras",
+        "title": "Extras",
+        "children": [
+          {
+            "type": "row",
+            "id": "extras-row",
+            "columns": 2,
+            "children": [
+              {
+                "id": "newsletter",
+                "label": "Newsletter",
+                "type": "checkbox",
+                "placeholder": "Email me product updates",
+                "default": false
+              },
+              {
+                "id": "bio",
+                "label": "Bio",
+                "type": "textarea",
+                "placeholder": "A short bio...",
+                "rows": 4
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "actions": [
+      {
+        "id": "submit",
+        "label": "Save",
+        "type": "submit",
+        "style": "primary"
+      },
+      {
+        "id": "reset",
+        "label": "Reset",
+        "type": "reset",
+        "style": "outline"
+      }
+    ]
+  }
+}
