@@ -11,6 +11,8 @@ import * as React from "react";
  *
  * This module provides customized components for rendering markdown content with syntax highlighting.
  * It uses highlight.js for code syntax highlighting and supports streaming content updates.
+*
+* Note: A highlight.js theme stylesheet (for example `github.css`) must be loaded globally.
  *
  * @example
  * ```tsx
