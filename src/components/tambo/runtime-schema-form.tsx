@@ -34,6 +34,8 @@ export const runtimeSchemaFormSchema = z.object({
 type RuntimeSchemaFormProps = z.infer<typeof runtimeSchemaFormSchema>;
 type SchemaFormProps = z.infer<typeof schemaFormSchema>;
 
+type LoadErrorKind = SchemaLoadErrorKind | "unsupported-version" | "invalid-version";
+
 type LoadState =
   | { status: "idle" }
   | { status: "loading"; url: string }
@@ -41,7 +43,7 @@ type LoadState =
   | {
       status: "error";
       url: string;
-      kind?: SchemaLoadErrorKind;
+      kind?: LoadErrorKind;
       message: string;
       details?: string;
     };

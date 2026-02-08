@@ -31,7 +31,11 @@ export function parseSchemaVersion(raw: string): ParsedSchemaVersion | null {
   return { major, minor, patch };
 }
 
-export function getSchemaVersionInfo(raw: string): SchemaVersionInfo {
+export function getSchemaVersionInfo(raw: unknown): SchemaVersionInfo {
+  if (typeof raw !== "string") {
+    return { status: "invalid", raw: raw === undefined ? "" : String(raw) };
+  }
+
   const trimmed = raw.trim();
   const parsed = parseSchemaVersion(trimmed);
 

@@ -6,9 +6,7 @@ export type SchemaLoadErrorKind =
   | "network"
   | "aborted"
   | "invalid-json"
-  | "validation"
-  | "unsupported-version"
-  | "invalid-version";
+  | "validation";
 
 export class SchemaLoadError extends Error {
   public readonly kind: SchemaLoadErrorKind;
