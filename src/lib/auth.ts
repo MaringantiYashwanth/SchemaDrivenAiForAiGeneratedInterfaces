@@ -28,6 +28,8 @@ const timingSafeEqualString = (a: string, b: string) => {
 
 const getSecret = () => process.env.AUTH_SESSION_SECRET ?? "";
 
+// Next's `cookies()` has historically returned a sync cookie store, but some versions/types
+// model it as async. This shim supports both without forcing call sites to care.
 const resolveCookies = async (): Promise<Awaited<ReturnType<typeof cookies>>> => {
   const cookieStoreOrPromise = cookies() as unknown;
   const then = (cookieStoreOrPromise as { then?: unknown } | null)?.then;

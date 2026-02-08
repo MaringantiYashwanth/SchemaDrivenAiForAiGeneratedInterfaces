@@ -35,7 +35,10 @@ type FallbackBehavior = z.infer<typeof fallbackBehaviorEnum>;
 const conditionValueSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
 const conditionRefSchema = z
   .string()
-  .describe("Reference to a form field id, or a context value like context.submitted");
+  .describe("Reference to a form field id, or a context value like context.submitted")
+  .refine((ref) => ref.startsWith("context.") || !ref.includes("."), {
+    message: "Refs must be either a field id or start with context.",
+  });
 
 const conditionSchema: z.ZodType<Condition> = z.lazy(
   () =>
@@ -52,7 +55,7 @@ const conditionSchema: z.ZodType<Condition> = z.lazy(
       z.object({ op: z.literal("or"), conditions: z.array(conditionSchema).min(1) }),
       z.object({ op: z.literal("not"), condition: conditionSchema }),
     ]),
-) as z.ZodType<Condition>;
+);
 
 export const schemaFormSchema = z.object({
   uiSchema: z.object({
@@ -131,7 +134,22 @@ const isPlainObject = (value: unknown): value is Record<string, unknown> =>
 
 const getRefValue = (ref: string, evalContext: ConditionEvalContext) => {
   if (ref.startsWith("context.")) {
-    return evalContext.context[ref.slice("context.".length)];
+    const key = ref.slice("context.".length);
+    if (!(key in evalContext.context)) {
+      console.warn(`Unknown context ref: ${ref}`);
+    }
+    return evalContext.context[key];
+  }
+
+  if (ref.includes(".")) {
+    console.warn(
+      `Unsupported nested ref: ${ref}; only field ids or context.* refs are supported.`,
+    );
+    return undefined;
+  }
+
+  if (!(ref in evalContext.values)) {
+    console.warn(`Unknown field ref: ${ref}`);
   }
 
   return evalContext.values[ref];
@@ -307,10 +325,10 @@ export function SchemaForm({ uiSchema }: SchemaFormProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
 
-  const evalContext: ConditionEvalContext = {
-    values: formData,
-    context: { submitted },
-  };
+  const evalContext = useMemo<ConditionEvalContext>(
+    () => ({ values: formData, context: { submitted } }),
+    [formData, submitted],
+  );
 
   const updateValue = (id: string, value: string | number | boolean) => {
     setFormData((prev) => ({ ...prev, [id]: value }));
@@ -328,6 +346,7 @@ export function SchemaForm({ uiSchema }: SchemaFormProps) {
 
     uiSchema.fields.forEach((field) => {
       const visibility = resolveVisibility(field.condition, field.fallback, evalContext);
+      // `required` is enforced only when the field is visible and enabled.
       if (!visibility.shouldRender || visibility.disabled) return;
       if (!field.required) return;
       if (isEmpty(formData[field.id])) {
