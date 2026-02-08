@@ -15,23 +15,44 @@ const actionTypeEnum = z.enum(["button", "submit", "reset"]);
 const actionStyleEnum = z.enum(["primary", "secondary", "outline"]).optional();
 const fallbackBehaviorEnum = z.enum(["hidden", "disabled"]);
 
-const conditionValueSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
+type ConditionValue = string | number | boolean | null;
 
-const conditionSchema: z.ZodType<unknown> = z.lazy(() =>
-  z.union([
-    z.boolean(),
-    z.object({ op: z.literal("equals"), ref: z.string(), value: conditionValueSchema }),
-    z.object({ op: z.literal("notEquals"), ref: z.string(), value: conditionValueSchema }),
-    z.object({ op: z.literal("in"), ref: z.string(), values: z.array(conditionValueSchema).min(1) }),
-    z.object({ op: z.literal("notIn"), ref: z.string(), values: z.array(conditionValueSchema).min(1) }),
-    z.object({ op: z.literal("exists"), ref: z.string() }),
-    z.object({ op: z.literal("truthy"), ref: z.string() }),
-    z.object({ op: z.literal("falsy"), ref: z.string() }),
-    z.object({ op: z.literal("and"), conditions: z.array(conditionSchema).min(1) }),
-    z.object({ op: z.literal("or"), conditions: z.array(conditionSchema).min(1) }),
-    z.object({ op: z.literal("not"), condition: conditionSchema }),
-  ]),
-);
+type Condition =
+  | boolean
+  | { op: "equals"; ref: string; value: ConditionValue }
+  | { op: "notEquals"; ref: string; value: ConditionValue }
+  | { op: "in"; ref: string; values: ConditionValue[] }
+  | { op: "notIn"; ref: string; values: ConditionValue[] }
+  | { op: "exists"; ref: string }
+  | { op: "truthy"; ref: string }
+  | { op: "falsy"; ref: string }
+  | { op: "and"; conditions: Condition[] }
+  | { op: "or"; conditions: Condition[] }
+  | { op: "not"; condition: Condition };
+
+type FallbackBehavior = z.infer<typeof fallbackBehaviorEnum>;
+
+const conditionValueSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
+const conditionRefSchema = z
+  .string()
+  .describe("Reference to a form field id, or a context value like context.submitted");
+
+const conditionSchema: z.ZodType<Condition> = z.lazy(
+  () =>
+    z.union([
+      z.boolean(),
+      z.object({ op: z.literal("equals"), ref: conditionRefSchema, value: conditionValueSchema }),
+      z.object({ op: z.literal("notEquals"), ref: conditionRefSchema, value: conditionValueSchema }),
+      z.object({ op: z.literal("in"), ref: conditionRefSchema, values: z.array(conditionValueSchema).min(1) }),
+      z.object({ op: z.literal("notIn"), ref: conditionRefSchema, values: z.array(conditionValueSchema).min(1) }),
+      z.object({ op: z.literal("exists"), ref: conditionRefSchema }),
+      z.object({ op: z.literal("truthy"), ref: conditionRefSchema }),
+      z.object({ op: z.literal("falsy"), ref: conditionRefSchema }),
+      z.object({ op: z.literal("and"), conditions: z.array(conditionSchema).min(1) }),
+      z.object({ op: z.literal("or"), conditions: z.array(conditionSchema).min(1) }),
+      z.object({ op: z.literal("not"), condition: conditionSchema }),
+    ]),
+) as z.ZodType<Condition>;
 
 export const schemaFormSchema = z.object({
   uiSchema: z.object({
@@ -139,53 +160,104 @@ const evaluateCondition = (condition: unknown, evalContext: ConditionEvalContext
 
   try {
     if (op === "equals") {
-      const ref = typeof condition.ref === "string" ? condition.ref : "";
-      return getRefValue(ref, evalContext) === condition.value;
+      if (typeof condition.ref !== "string" || condition.ref.trim() === "") {
+        console.warn('Condition op "equals" requires a non-empty string ref; rendering element.', condition);
+        return true;
+      }
+      return getRefValue(condition.ref, evalContext) === condition.value;
     }
 
     if (op === "notEquals") {
-      const ref = typeof condition.ref === "string" ? condition.ref : "";
-      return getRefValue(ref, evalContext) !== condition.value;
+      if (typeof condition.ref !== "string" || condition.ref.trim() === "") {
+        console.warn(
+          'Condition op "notEquals" requires a non-empty string ref; rendering element.',
+          condition,
+        );
+        return true;
+      }
+      return getRefValue(condition.ref, evalContext) !== condition.value;
     }
 
     if (op === "in") {
-      const ref = typeof condition.ref === "string" ? condition.ref : "";
-      const values = Array.isArray(condition.values) ? condition.values : [];
-      return values.includes(getRefValue(ref, evalContext));
+      if (typeof condition.ref !== "string" || condition.ref.trim() === "") {
+        console.warn('Condition op "in" requires a non-empty string ref; rendering element.', condition);
+        return true;
+      }
+      if (!Array.isArray(condition.values) || condition.values.length === 0) {
+        console.warn('Condition op "in" requires a non-empty values array; rendering element.', condition);
+        return true;
+      }
+
+      return condition.values.includes(getRefValue(condition.ref, evalContext));
     }
 
     if (op === "notIn") {
-      const ref = typeof condition.ref === "string" ? condition.ref : "";
-      const values = Array.isArray(condition.values) ? condition.values : [];
-      return !values.includes(getRefValue(ref, evalContext));
+      if (typeof condition.ref !== "string" || condition.ref.trim() === "") {
+        console.warn('Condition op "notIn" requires a non-empty string ref; rendering element.', condition);
+        return true;
+      }
+      if (!Array.isArray(condition.values) || condition.values.length === 0) {
+        console.warn('Condition op "notIn" requires a non-empty values array; rendering element.', condition);
+        return true;
+      }
+
+      return !condition.values.includes(getRefValue(condition.ref, evalContext));
     }
 
     if (op === "exists") {
-      const ref = typeof condition.ref === "string" ? condition.ref : "";
-      return isDefinedForCondition(getRefValue(ref, evalContext));
+      if (typeof condition.ref !== "string" || condition.ref.trim() === "") {
+        console.warn('Condition op "exists" requires a non-empty string ref; rendering element.', condition);
+        return true;
+      }
+      return isDefinedForCondition(getRefValue(condition.ref, evalContext));
     }
 
     if (op === "truthy") {
-      const ref = typeof condition.ref === "string" ? condition.ref : "";
-      return Boolean(getRefValue(ref, evalContext));
+      if (typeof condition.ref !== "string" || condition.ref.trim() === "") {
+        console.warn('Condition op "truthy" requires a non-empty string ref; rendering element.', condition);
+        return true;
+      }
+      return Boolean(getRefValue(condition.ref, evalContext));
     }
 
     if (op === "falsy") {
-      const ref = typeof condition.ref === "string" ? condition.ref : "";
-      return !Boolean(getRefValue(ref, evalContext));
+      if (typeof condition.ref !== "string" || condition.ref.trim() === "") {
+        console.warn('Condition op "falsy" requires a non-empty string ref; rendering element.', condition);
+        return true;
+      }
+      return !Boolean(getRefValue(condition.ref, evalContext));
     }
 
     if (op === "and") {
-      const conditions = Array.isArray(condition.conditions) ? condition.conditions : [];
-      return conditions.every((child) => evaluateCondition(child, evalContext));
+      if (!Array.isArray(condition.conditions) || condition.conditions.length === 0) {
+        console.warn(
+          'Condition op "and" requires a non-empty conditions array; rendering element.',
+          condition,
+        );
+        return true;
+      }
+
+      return condition.conditions.every((child) => evaluateCondition(child, evalContext));
     }
 
     if (op === "or") {
-      const conditions = Array.isArray(condition.conditions) ? condition.conditions : [];
-      return conditions.some((child) => evaluateCondition(child, evalContext));
+      if (!Array.isArray(condition.conditions) || condition.conditions.length === 0) {
+        console.warn(
+          'Condition op "or" requires a non-empty conditions array; rendering element.',
+          condition,
+        );
+        return true;
+      }
+
+      return condition.conditions.some((child) => evaluateCondition(child, evalContext));
     }
 
     if (op === "not") {
+      if (condition.condition === undefined) {
+        console.warn('Condition op "not" requires a nested condition; rendering element.', condition);
+        return true;
+      }
+
       return !evaluateCondition(condition.condition, evalContext);
     }
 
@@ -198,8 +270,8 @@ const evaluateCondition = (condition: unknown, evalContext: ConditionEvalContext
 };
 
 const resolveVisibility = (
-  condition: unknown,
-  fallback: unknown,
+  condition: Condition | undefined,
+  fallback: FallbackBehavior | undefined,
   evalContext: ConditionEvalContext,
 ) => {
   const conditionMet = evaluateCondition(condition, evalContext);
