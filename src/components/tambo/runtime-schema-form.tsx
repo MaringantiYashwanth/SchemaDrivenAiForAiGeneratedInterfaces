@@ -87,7 +87,7 @@ export function RuntimeSchemaForm(props: RuntimeSchemaFormProps) {
       <Card className="w-full">
         <CardHeader>
           <CardTitle>Schema loader</CardTitle>
-          <CardDescription>Waiting for a schema URL.</CardDescription>
+          <CardDescription>Waiting for `schemaUrl`.</CardDescription>
         </CardHeader>
       </Card>
     );

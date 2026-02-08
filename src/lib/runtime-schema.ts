@@ -21,6 +21,7 @@ export class SchemaLoadError extends Error {
 }
 
 export function isSupportedSchemaUrl(url: string): boolean {
+  if (url.startsWith("//")) return true;
   return url.startsWith("/") || url.startsWith("https://") || url.startsWith("http://");
 }
 
