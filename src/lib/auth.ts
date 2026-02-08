@@ -50,7 +50,8 @@ export async function createSession(email: string) {
   const signature = sign(payload, secret);
   const value = `${payload}.${signature}`;
 
-  cookies().set(SESSION_COOKIE, value, {
+  const cookieStore = await cookies();
+  cookieStore.set(SESSION_COOKIE, value, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
@@ -60,7 +61,8 @@ export async function createSession(email: string) {
 }
 
 export async function clearSession() {
-  cookies().delete(SESSION_COOKIE);
+  const cookieStore = await cookies();
+  cookieStore.delete(SESSION_COOKIE);
 }
 
 export async function getSession(): Promise<Session | null> {
@@ -69,7 +71,8 @@ export async function getSession(): Promise<Session | null> {
     return null;
   }
 
-  const cookie = cookies().get(SESSION_COOKIE)?.value;
+  const cookieStore = await cookies();
+  const cookie = cookieStore.get(SESSION_COOKIE)?.value;
   if (!cookie) {
     return null;
   }
