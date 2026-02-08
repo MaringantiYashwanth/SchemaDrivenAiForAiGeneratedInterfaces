@@ -10,46 +10,52 @@
         "description": "This information is used to personalize your account.",
         "children": [
           {
-            "type": "columns",
-            "id": "basics-columns",
-            "columns": [
+            "type": "stack",
+            "id": "basics-stack",
+            "children": [
               {
-                "id": "basics-left",
-                "children": [
+                "type": "columns",
+                "id": "basics-columns",
+                "columns": [
                   {
-                    "id": "name",
-                    "label": "Name",
-                    "type": "text",
-                    "placeholder": "Ada Lovelace",
-                    "required": true
+                    "id": "basics-left",
+                    "children": [
+                      {
+                        "id": "name",
+                        "label": "Name",
+                        "type": "text",
+                        "placeholder": "Ada Lovelace",
+                        "required": true
+                      },
+                      {
+                        "id": "email",
+                        "label": "Email",
+                        "type": "email",
+                        "placeholder": "ada@example.com",
+                        "required": true
+                      }
+                    ]
                   },
                   {
-                    "id": "email",
-                    "label": "Email",
-                    "type": "email",
-                    "placeholder": "ada@example.com",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "id": "basics-right",
-                "children": [
-                  {
-                    "id": "age",
-                    "label": "Age",
-                    "type": "number",
-                    "min": 18,
-                    "max": 99,
-                    "placeholder": "18",
-                    "required": true
-                  },
-                  {
-                    "id": "gender",
-                    "label": "Gender",
-                    "type": "select",
-                    "options": ["Female", "Male", "Non-binary", "Prefer not to say"],
-                    "placeholder": "Select an option"
+                    "id": "basics-right",
+                    "children": [
+                      {
+                        "id": "age",
+                        "label": "Age",
+                        "type": "number",
+                        "min": 18,
+                        "max": 99,
+                        "placeholder": "18",
+                        "required": true
+                      },
+                      {
+                        "id": "gender",
+                        "label": "Gender",
+                        "type": "select",
+                        "options": ["Female", "Male", "Non-binary", "Prefer not to say"],
+                        "placeholder": "Select an option"
+                      }
+                    ]
                   }
                 ]
               }
@@ -63,18 +69,25 @@
         "title": "Extras",
         "children": [
           {
-            "id": "newsletter",
-            "label": "Newsletter",
-            "type": "checkbox",
-            "placeholder": "Email me product updates",
-            "default": false
-          },
-          {
-            "id": "bio",
-            "label": "Bio",
-            "type": "textarea",
-            "placeholder": "A short bio...",
-            "rows": 4
+            "type": "row",
+            "id": "extras-row",
+            "columns": 2,
+            "children": [
+              {
+                "id": "newsletter",
+                "label": "Newsletter",
+                "type": "checkbox",
+                "placeholder": "Email me product updates",
+                "default": false
+              },
+              {
+                "id": "bio",
+                "label": "Bio",
+                "type": "textarea",
+                "placeholder": "A short bio...",
+                "rows": 4
+              }
+            ]
           }
         ]
       }
