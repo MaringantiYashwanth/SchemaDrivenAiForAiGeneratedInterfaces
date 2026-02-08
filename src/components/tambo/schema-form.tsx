@@ -199,12 +199,12 @@ const normalizeSubmissionValue = (field: Field, value: unknown) => {
 
   if (field.type === "number") {
     if (value === "" || value === undefined || value === null) return undefined;
-    if (typeof value === "number" && !Number.isNaN(value)) return value;
-    if (typeof value === "string") {
-      const numeric = Number(value);
-      return Number.isNaN(numeric) ? undefined : numeric;
+    const numeric = typeof value === "number" ? value : typeof value === "string" ? Number(value) : Number.NaN;
+    if (Number.isNaN(numeric)) {
+      console.warn("Dropping invalid numeric submission value", { fieldId: field.id, value });
+      return undefined;
     }
-    return undefined;
+    return numeric;
   }
 
   const asString =
@@ -294,8 +294,11 @@ const validateFieldValue = (field: Field, value: unknown): FieldValidation | nul
         if (!regex.test(text)) {
           return { message: `${field.label} does not match the expected format` };
         }
-      } catch {
-        // Ignore invalid regex patterns.
+      } catch (error) {
+        console.warn("Invalid pattern provided for field", { fieldId: field.id, pattern: field.pattern, error });
+        return {
+          message: `${field.label} is misconfigured: invalid pattern`,
+        };
       }
     }
   }
@@ -486,8 +489,8 @@ const resolveVisibility = (
 };
 
 export function SchemaForm(props: unknown) {
-  const parsed = schemaFormSchema.safeParse(props);
   const { sendThreadMessage } = useTamboThread();
+  const parsed = useMemo(() => schemaFormSchema.safeParse(props), [props]);
 
   if (!parsed.success) {
     const issues = parsed.error.issues.slice(0, 8);
@@ -548,6 +551,7 @@ export function SchemaForm(props: unknown) {
   const [suggestions, setSuggestions] = useState<Record<string, FieldSuggestion[]>>({});
   const [submitted, setSubmitted] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [submissionPayload, setSubmissionPayload] = useState<Record<string, unknown> | null>(null);
 
   const evalContext = useMemo<ConditionEvalContext>(
     () => ({ values: formData, context: { submitted } }),
@@ -603,26 +607,35 @@ export function SchemaForm(props: unknown) {
     setSuggestions({});
     setSubmitted(false);
     setSubmitStatus("idle");
+    setSubmissionPayload(null);
   };
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!validate()) return;
 
-    setSubmitted(true);
-    setSubmitStatus("idle");
-
-    if (!submitToAssistant) return;
+    // Freeze the submission context to match what was visible/enabled at the moment the user hit submit.
+    const submitEvalContext: ConditionEvalContext = {
+      values: formData,
+      context: { submitted },
+    };
 
     const payload: Record<string, unknown> = {};
     uiSchema.fields.forEach((field) => {
-      const visibility = resolveVisibility(field.condition, field.fallback, evalContext);
+      const visibility = resolveVisibility(field.condition, field.fallback, submitEvalContext);
       if (!visibility.shouldRender || visibility.disabled) return;
       const normalized = normalizeSubmissionValue(field, formData[field.id]);
       if (normalized !== undefined) {
         payload[field.id] = normalized;
       }
     });
+
+    setSubmissionPayload(payload);
+
+    setSubmitted(true);
+    setSubmitStatus("idle");
+
+    if (!submitToAssistant) return;
 
     const payloadJson = JSON.stringify(payload, null, 2);
     const defaultMessage = `Form submission (${uiSchema.title}):\n\n\`\`\`json\n${payloadJson}\n\`\`\``;
@@ -631,13 +644,13 @@ export function SchemaForm(props: unknown) {
       : submitMessage ?? defaultMessage;
 
     setSubmitStatus("sending");
-    Promise.resolve()
-      .then(() => sendThreadMessage(message))
-      .then(() => setSubmitStatus("sent"))
-      .catch((error) => {
-        console.warn("Failed to send form submission to assistant", error);
-        setSubmitStatus("error");
-      });
+    try {
+      await sendThreadMessage(message);
+      setSubmitStatus("sent");
+    } catch (error) {
+      console.warn("Failed to send form submission to assistant", error);
+      setSubmitStatus("error");
+    }
   };
 
   const actions: Action[] = uiSchema.actions?.length
@@ -871,7 +884,7 @@ export function SchemaForm(props: unknown) {
               )}
             </div>
             <pre className="rounded-md bg-background p-3 text-xs overflow-x-auto">
-              {JSON.stringify(formData, null, 2)}
+              {JSON.stringify(submissionPayload ?? formData, null, 2)}
             </pre>
           </div>
         )}
