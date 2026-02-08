@@ -3,7 +3,6 @@
 import { cn } from "@/lib/utils";
 import DOMPurify from "dompurify";
 import hljs from "highlight.js";
-import "highlight.js/styles/github.css";
 import { Check, Copy, ExternalLink, X } from "lucide-react";
 import * as React from "react";
 
