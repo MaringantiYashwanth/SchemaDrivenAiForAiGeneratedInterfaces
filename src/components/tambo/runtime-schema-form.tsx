@@ -17,7 +17,6 @@ import {
   SchemaLoadError,
   type SchemaLoadErrorKind,
 } from "@/lib/runtime-schema";
-import { getSchemaVersionInfo, SUPPORTED_SCHEMA_MAJOR_VERSIONS } from "@/lib/schema-version";
 
 export const runtimeSchemaFormSchema = z.object({
   schemaUrl: z
@@ -34,8 +33,6 @@ export const runtimeSchemaFormSchema = z.object({
 type RuntimeSchemaFormProps = z.infer<typeof runtimeSchemaFormSchema>;
 type SchemaFormProps = z.infer<typeof schemaFormSchema>;
 
-type LoadErrorKind = SchemaLoadErrorKind | "unsupported-version" | "invalid-version";
-
 type LoadState =
   | { status: "idle" }
   | { status: "loading"; url: string }
@@ -43,7 +40,7 @@ type LoadState =
   | {
       status: "error";
       url: string;
-      kind?: LoadErrorKind;
+      kind?: SchemaLoadErrorKind;
       message: string;
       details?: string;
     };
@@ -84,28 +81,6 @@ export function RuntimeSchemaForm(props: RuntimeSchemaFormProps) {
         if (requestId !== requestIdRef.current) {
           return;
         }
-        const versionInfo = getSchemaVersionInfo(data.version);
-        if (versionInfo.status === "invalid") {
-          setState({
-            status: "error",
-            url,
-            kind: "invalid-version",
-            message: "Schema `version` must be a dot-separated numeric version (for example: 1 or 1.0.0).",
-            details: `Received: ${JSON.stringify(data.version)}`,
-          });
-          return;
-        }
-
-        if (versionInfo.status === "unsupported") {
-          setState({
-            status: "error",
-            url,
-            kind: "unsupported-version",
-            message: `Unsupported schema version ${JSON.stringify(data.version)}. Supported major versions: ${SUPPORTED_SCHEMA_MAJOR_VERSIONS.join(", ")}.`,
-          });
-          return;
-        }
-
         setState({ status: "success", url, data });
       })
       .catch((error: unknown) => {
@@ -178,11 +153,7 @@ export function RuntimeSchemaForm(props: RuntimeSchemaFormProps) {
       <Card className="w-full">
         <CardHeader>
           <CardTitle>
-            {state.kind === "invalid-url"
-              ? "Unsupported schema URL"
-              : state.kind === "unsupported-version" || state.kind === "invalid-version"
-                ? "Unsupported schema version"
-                : "Schema load failed"}
+            {state.kind === "invalid-url" ? "Unsupported schema URL" : "Schema load failed"}
           </CardTitle>
           <CardDescription className="break-words">{state.url}</CardDescription>
         </CardHeader>

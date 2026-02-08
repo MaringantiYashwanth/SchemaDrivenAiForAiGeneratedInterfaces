@@ -603,8 +603,9 @@ export function SchemaForm({ version, uiSchema }: SchemaFormProps) {
         )}
         {showLegacyWarning && (
           <CardDescription className="text-amber-700 dark:text-amber-400">
-            Legacy schema detected (defaulted to version <span className="font-mono">{version}</span>). Add
-            a <span className="font-mono">version</span> field (recommended: <span className="font-mono">"1"</span>).
+            Legacy schema version detected (<span className="font-mono">{version}</span>). Add a
+            <span className="font-mono"> version</span> field with a supported major version (for example:
+            <span className="font-mono"> "{SUPPORTED_SCHEMA_MAJOR_VERSIONS[0]}"</span>).
           </CardDescription>
         )}
       </CardHeader>
