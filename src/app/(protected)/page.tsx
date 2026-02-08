@@ -55,7 +55,7 @@ export default function Home() {
               <div className="rounded-xl border bg-white p-5 shadow-sm dark:bg-slate-900">
                 <h2 className="text-lg font-semibold">Try this prompt</h2>
                 <pre className="mt-3 whitespace-pre-wrap rounded-lg bg-slate-900 p-4 text-xs text-slate-100">
-{`Create a schema-driven form for a user profile. Include name, email, age (18-99), gender select, and a newsletter checkbox. Add submit and reset actions.`}
+{`Create a schema-driven form for a user profile. Include name, email, age (18-99), gender select, and a newsletter checkbox. Add submit and reset actions. Include a top-level "version": "1".`}
                 </pre>
               </div>
               <RenderedComponentPanel />

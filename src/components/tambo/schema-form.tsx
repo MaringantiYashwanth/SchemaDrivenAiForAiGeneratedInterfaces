@@ -3,6 +3,11 @@
 import { useMemo, useState } from "react";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
+import {
+  getSchemaVersionInfo,
+  LEGACY_SCHEMA_VERSION,
+  SUPPORTED_SCHEMA_MAJOR_VERSIONS,
+} from "@/lib/schema-version";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
@@ -160,7 +165,18 @@ const uiSchemaWithFieldsOnly = baseUiSchema.extend({
   layout: z.undefined().optional(),
 });
 
+const schemaVersionFieldSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .describe(
+    "Schema version. Recommended: '1'. If omitted, the renderer falls back to legacy mode (version '0').",
+  )
+  .optional()
+  .default(LEGACY_SCHEMA_VERSION);
+
 export const schemaFormSchema = z.object({
+  version: schemaVersionFieldSchema,
   uiSchema: z.union([uiSchemaWithLayoutAndFields, uiSchemaWithLayoutOnly, uiSchemaWithFieldsOnly]),
 });
 
@@ -240,7 +256,47 @@ function getNodeKey(node: SchemaNode, fallback: string) {
   return fallback;
 }
 
-export function SchemaForm({ uiSchema }: SchemaFormProps) {
+export function SchemaForm({ version, uiSchema }: SchemaFormProps) {
+  const versionInfo = getSchemaVersionInfo(version);
+  const showLegacyWarning =
+    versionInfo.status === "legacy" && process.env.NODE_ENV !== "production";
+
+  if (versionInfo.status === "invalid") {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>Invalid schema version</CardTitle>
+          <CardDescription>
+            Expected a dot-separated numeric version (for example: 1 or 1.0.0).
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-red-600 dark:text-red-400">
+            Received version: <span className="font-mono">{JSON.stringify(versionInfo.raw)}</span>
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (versionInfo.status === "unsupported") {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>Unsupported schema version</CardTitle>
+          <CardDescription>
+            This renderer supports major version{SUPPORTED_SCHEMA_MAJOR_VERSIONS.length === 1 ? "" : "s"} {SUPPORTED_SCHEMA_MAJOR_VERSIONS.join(", ")}.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-red-600 dark:text-red-400">
+            Received version: <span className="font-mono">{JSON.stringify(versionInfo.raw)}</span>
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const nodes = useMemo<SchemaNode[]>(() => {
     if (uiSchema.layout?.length) {
       return uiSchema.layout;
@@ -544,6 +600,12 @@ export function SchemaForm({ uiSchema }: SchemaFormProps) {
         <CardTitle>{uiSchema.title}</CardTitle>
         {uiSchema.description && (
           <CardDescription>{uiSchema.description}</CardDescription>
+        )}
+        {showLegacyWarning && (
+          <CardDescription className="text-amber-700 dark:text-amber-400">
+            Legacy schema detected (defaulted to version <span className="font-mono">{version}</span>). Add
+            a <span className="font-mono">version</span> field (recommended: <span className="font-mono">"1"</span>).
+          </CardDescription>
         )}
       </CardHeader>
       <CardContent className="space-y-6">

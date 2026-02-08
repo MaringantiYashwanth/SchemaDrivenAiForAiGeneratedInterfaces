@@ -17,6 +17,7 @@ import {
   SchemaLoadError,
   type SchemaLoadErrorKind,
 } from "@/lib/runtime-schema";
+import { getSchemaVersionInfo, SUPPORTED_SCHEMA_MAJOR_VERSIONS } from "@/lib/schema-version";
 
 export const runtimeSchemaFormSchema = z.object({
   schemaUrl: z
@@ -26,7 +27,7 @@ export const runtimeSchemaFormSchema = z.object({
       message: "schemaUrl must start with /, http://, or https://",
     })
     .describe(
-      "URL to a JSON schema payload. Supports relative paths (e.g. /schemas/user-profile.json) and remote https:// endpoints. The response can be either a `uiSchema` object or `{ uiSchema: ... }`.",
+      "URL to a JSON schema payload. Supports relative paths (e.g. /schemas/user-profile.json) and remote https:// endpoints. The response can be either a `uiSchema` object or `{ uiSchema: ... }`. Schemas may include a top-level `version` field.",
     ),
 });
 
@@ -81,6 +82,28 @@ export function RuntimeSchemaForm(props: RuntimeSchemaFormProps) {
         if (requestId !== requestIdRef.current) {
           return;
         }
+        const versionInfo = getSchemaVersionInfo(data.version);
+        if (versionInfo.status === "invalid") {
+          setState({
+            status: "error",
+            url,
+            kind: "invalid-version",
+            message: "Schema `version` must be a dot-separated numeric version (for example: 1 or 1.0.0).",
+            details: `Received: ${JSON.stringify(data.version)}`,
+          });
+          return;
+        }
+
+        if (versionInfo.status === "unsupported") {
+          setState({
+            status: "error",
+            url,
+            kind: "unsupported-version",
+            message: `Unsupported schema version ${JSON.stringify(data.version)}. Supported major versions: ${SUPPORTED_SCHEMA_MAJOR_VERSIONS.join(", ")}.`,
+          });
+          return;
+        }
+
         setState({ status: "success", url, data });
       })
       .catch((error: unknown) => {
@@ -153,7 +176,11 @@ export function RuntimeSchemaForm(props: RuntimeSchemaFormProps) {
       <Card className="w-full">
         <CardHeader>
           <CardTitle>
-            {state.kind === "invalid-url" ? "Unsupported schema URL" : "Schema load failed"}
+            {state.kind === "invalid-url"
+              ? "Unsupported schema URL"
+              : state.kind === "unsupported-version" || state.kind === "invalid-version"
+                ? "Unsupported schema version"
+                : "Schema load failed"}
           </CardTitle>
           <CardDescription className="break-words">{state.url}</CardDescription>
         </CardHeader>
@@ -169,5 +196,5 @@ export function RuntimeSchemaForm(props: RuntimeSchemaFormProps) {
     );
   }
 
-  return <SchemaForm uiSchema={state.data.uiSchema} />;
+  return <SchemaForm version={state.data.version} uiSchema={state.data.uiSchema} />;
 }

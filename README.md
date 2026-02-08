@@ -38,10 +38,11 @@ How To Use
 
 3. The rendered UI appears on the right.
  ## Example Prompt
-   Create a schema-driven form for a user profile. Include name, email, age (18-99), gender select, and a newsletter checkbox. Add submit and reset actions.
+   Create a schema-driven form for a user profile. Include name, email, age (18-99), gender select, and a newsletter checkbox. Add submit and reset actions. Include a top-level "version": "1".
    Schema Shape
-```bash
-   {
+```json
+{
+  "version": "1",
   "uiSchema": {
     "title": "User Profile Form",
     "description": "Schema-driven UI for collecting user details",
@@ -65,6 +66,8 @@ How To Use
   }
 }
 ```
+
+If `version` is omitted, the renderer falls back to legacy mode (`"0"`).
 ## Key Files
 
 src/components/tambo/schema-form.tsx schema renderer
